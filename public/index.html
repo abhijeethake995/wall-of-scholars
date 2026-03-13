@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wall Of Scholars</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; margin: 0; background: #f8fafc; padding-top: 76px; }
+
+        .podium-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #e2e8f0; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); background: #f8fafc; }
+        .winner .podium-img { width: 100px; height: 100px; border-color: gold; border-width: 4px; }
+
+        /* --- SPA TABS --- */
+        .tab-section { display: none; animation: fadeIn 0.3s; }
+        .tab-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- NAVBAR --- */
+        .glass { background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .nav-link { cursor: pointer; }
+        .nav-link.active { color: #070707 !important; font-weight: 600; border-bottom: 2px solid #22c55e; } 
+        
+        /* --- HERO --- */
+        .hero { padding: 100px 0 80px; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: white; }
+        .hero h1 { font-size: 48px; font-weight: 700; }
+        .hero span { color: #ffd700; }
+        .hero-text { margin: 20px 0; font-size: 18px; }
+        .hero-img { width: 100%; max-width: 500px; height: auto; border-radius: 15px; }
+
+        /* --- SECTIONS --- */
+        .section { padding: 80px 0; min-height: 80vh; }
+        .gray { background: #f1f5f9; }
+        .section-title { text-align: center; font-weight: 600; margin-bottom: 50px; }
+
+        /* --- CARDS --- */
+        .achiever-card { background: white; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.08); transition: 0.3s; height: 100%; }
+        .achiever-card:hover { transform: translateY(-6px); }
+        .winner { border: 2px solid gold; transform: scale(1.05); }
+        .rank { font-size: 40px; margin-bottom: 10px; }
+
+        .achievement-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); transition: 0.3s; height: 100%; cursor: pointer; }
+        .achievement-card:hover { transform: translateY(-6px); box-shadow: 0 15px 25px rgba(0,0,0,0.15); }
+        .achievement-img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; background: #e2e8f0; }
+        .student-name { font-weight: 600; margin: 5px 0; color: #0f2027; }
+
+        /* --- STATS --- */
+        .stats { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: white; padding: 70px 0; }
+        .stats h2 { font-size: 40px; color: #ffd700; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top glass">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold" href="#">Wall Of Scholars</a>
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="nav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link active" onclick="switchTab('home')">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchTab('achievements')">All Achievements</a></li>
+                    <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-outline-dark fw-bold px-4" href="pages/login.html">Login</a></li>
+                    <li class="nav-item ms-lg-2 mt-2 mt-lg-0"><a class="btn btn-primary fw-bold px-4" href="pages/signup.html">Sign Up</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="home" class="tab-section active">
+        
+        <section class="hero">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6 mb-4 mb-lg-0">
+                        <h1>Showcase Your <span>Achievements</span></h1>
+                        <p class="hero-text">A platform to recognize student excellence, highlight achievements, and inspire the next generation.</p>
+                        <a class="btn btn-main" href="pages/signup.html">Join the Wall of Fame</a>
+                    </div>
+                    <div class="col-lg-6 text-center">
+                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1000&auto=format&fit=crop" class="hero-img" alt="Students">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">Top Achievers</h2>
+                <div class="row g-4 justify-content-center" id="podium-container">
+                    <div class="text-center text-muted">Loading top scholars...</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section gray">
+            <div class="container">
+                <h2 class="section-title">Wall of Fame</h2>
+                <div class="row g-4" id="wall-of-fame-grid">
+                    <div class="text-center text-muted">Loading achievements...</div>
+                </div>
+                <div class="text-center mt-5">
+                    <button class="btn btn-outline-dark fw-bold px-4 py-2" onclick="switchTab('achievements')">View All Achievements</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats">
+            <div class="container">
+                <div class="row text-center">
+                    <div class="col-md-6 mb-4 mb-md-0">
+                        <h2 id="stat-certs">0</h2>
+                        <p>Total Verified Certificates</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h2 id="stat-papers">0</h2>
+                        <p>Research Papers & Academics</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="achievements" class="tab-section section gray">
+        <div class="container">
+            <h2 class="section-title">All Approved Achievements</h2>
+            
+            <div class="row g-3 mb-5 bg-white p-4 rounded-3 shadow-sm align-items-center">
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Search Student</label>
+                    <input type="text" id="filter-student" class="form-control" placeholder="Type a name..." onkeyup="applyFilters()">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Filter by Department</label>
+                    <select id="filter-department" class="form-select" onchange="applyFilters()">
+                        <option value="All">All Departments</option>
+                        <option value="Computer Engineering">Computer Engineering</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Filter by Category</label>
+                    <select id="filter-category" class="form-select" onchange="applyFilters()">
+                        <option value="All">All Categories</option>
+                        <option value="Hackathon">Hackathon</option>
+                        <option value="Academics">Academics</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Cultural">Cultural</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-4" id="all-certs-grid">
+            </div>
+
+            <div class="text-center mt-5">
+                <button id="see-more-btn" class="btn btn-outline-primary px-5 py-2 fw-bold" onclick="loadMoreCerts()" style="display: none;">
+                    Load More Achievements ↓
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="certModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center pt-0 px-4 pb-5">
+                    <img id="modal-img" src="" class="img-fluid rounded mb-4 shadow-sm" style="max-height: 350px; width: 100%; object-fit: cover; background: #e2e8f0;">
+                    
+                    <h3 id="modal-title" class="fw-bold mb-1"></h3>
+                    <p id="modal-student" class="text-muted fs-5 mb-3"></p>
+                    
+                    <div class="mb-4">
+                        <span id="modal-category" class="badge bg-primary px-3 py-2 rounded-pill fs-6"></span>
+                    </div>
+                    
+                    <p id="modal-desc" class="mb-4 text-start bg-light p-3 rounded text-muted" style="font-size: 0.95rem;"></p>
+                    
+                    <a id="modal-doc-btn" href="#" target="_blank" class="btn btn-success px-4 py-2 fw-bold">👁️ View Official Certificate</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Global variables for filters, pagination, and popup modal data
+        let allPublicCerts = []; 
+        let filteredCerts = [];
+        let visibleCount = 12;
+        let globalCertsMap = {}; 
+
+        // --- TAB SWITCHING LOGIC ---
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            document.querySelectorAll('.nav-link').forEach(nav => nav.classList.remove('active'));
+            if(event && event.target && event.target.classList.contains('nav-link')) {
+                event.target.classList.add('active');
+            } else {
+                document.querySelector(`.nav-link[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            }
+
+            const navbarCollapse = document.getElementById('nav');
+            if (navbarCollapse.classList.contains('show')) {
+                new bootstrap.Collapse(navbarCollapse).toggle();
+            }
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+
+            if(tabId === 'home') loadHomeData();
+            if(tabId === 'achievements') loadAllCerts();
+        }
+
+        async function loadHomeData() {
+            // 1. Stats
+            try {
+                const statRes = await fetch('/api/stats');
+                const stats = await statRes.json();
+                document.getElementById('stat-certs').innerText = (stats.certificates || 0) + "+";
+                document.getElementById('stat-papers').innerText = (stats.research_papers || 0) + "+";
+            } catch(e) {}
+
+            // 2. Podium (Top 3)
+            try {
+                const leadRes = await fetch('/api/leaderboard');
+                const leaders = await leadRes.json();
+                const podium = document.getElementById('podium-container');
+                podium.innerHTML = '';
+                
+                const getAvatar = (u) => u.profile_pic || `https://ui-avatars.com/api/?name=${u.username}&background=random&color=fff&size=128`;
+
+                if(leaders.length > 0) {
+                    const top3 = [leaders[1], leaders[0], leaders[2]].filter(Boolean); 
+                    top3.forEach(user => {
+                        let isWinner = user === leaders[0] ? 'winner' : '';
+                        let rankIcon = user === leaders[0] ? '🥇' : (user === leaders[1] ? '🥈' : '🥉');
+                        
+                        podium.innerHTML += `
+                            <div class="col-md-4 col-sm-6">
+                                <div class="achiever-card ${isWinner}">
+                                    <div class="rank">${rankIcon}</div>
+                                    <img src="${getAvatar(user)}" class="podium-img" alt="${user.username}">
+                                    <h4>${user.username}</h4>
+                                    <p class="text-success fw-bold">${user.total_points} Points</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    podium.innerHTML = '<p class="text-center">Awaiting first approvals!</p>';
+                }
+            } catch(e) {}
+
+            // 3. Wall of Fame (ONLY Pinned, Limit 6)
+            try {
+                const certRes = await fetch('/api/achievements/public');
+                const certs = await certRes.json();
+                
+                certs.forEach(cert => globalCertsMap[cert.id] = cert);
+                
+                const pinnedCerts = certs.filter(cert => cert.is_pinned === 1 || cert.is_pinned === true);
+                renderCards(pinnedCerts.slice(0, 6), 'wall-of-fame-grid');
+            } catch(e) { console.error("Wall of Fame Error:", e); }
+        }
+
+        async function loadAllCerts() {
+            try {
+                const res = await fetch('/api/achievements/public');
+                allPublicCerts = await res.json();
+                
+                allPublicCerts.forEach(cert => globalCertsMap[cert.id] = cert);
+                
+                document.getElementById('filter-student').value = '';
+                document.getElementById('filter-department').value = 'All';
+                document.getElementById('filter-category').value = 'All';
+                
+                applyFilters();
+            } catch(e) {}
+        }
+
+        // --- FILTERS & PAGINATION ---
+        window.applyFilters = function() {
+            const studentText = document.getElementById('filter-student').value.toLowerCase();
+            const deptVal = document.getElementById('filter-department').value;
+            const catVal = document.getElementById('filter-category').value;
+
+            filteredCerts = allPublicCerts.filter(cert => {
+                const matchStudent = (cert.student_name || '').toLowerCase().includes(studentText);
+                const matchDept = (deptVal === 'All' || cert.department === deptVal);
+                const matchCat = (catVal === 'All' || cert.category.includes(catVal)); 
+                return matchStudent && matchDept && matchCat;
+            });
+
+            visibleCount = 12; 
+            displayFilteredCerts();
+        }
+
+        window.displayFilteredCerts = function() {
+            const certsToShow = filteredCerts.slice(0, visibleCount);
+            renderCards(certsToShow, 'all-certs-grid');
+
+            const seeMoreBtn = document.getElementById('see-more-btn');
+            seeMoreBtn.style.display = (filteredCerts.length > visibleCount) ? 'inline-block' : 'none';
+        }
+
+        window.loadMoreCerts = function() {
+            visibleCount += 12;
+            displayFilteredCerts();
+        }
+
+        // --- RENDER CARDS & POPUP LOGIC ---
+        function renderCards(dataArray, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            if(!dataArray || dataArray.length === 0) {
+                container.innerHTML = '<p class="text-center w-100 mt-4 text-muted">No achievements found.</p>'; return;
+            }
+            
+            dataArray.forEach(item => {
+                const imgPath = item.student_photo || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600&auto=format&fit=crop';
+                
+                container.innerHTML += `
+                    <div class="col-md-4">
+                        <div class="achievement-card text-center" onclick="openModal(${item.id})">
+                            <img src="${imgPath}" class="achievement-img" alt="Photo">
+                            <h5 class="mt-3 fw-bold">${item.title}</h5>
+                            <p class="student-name">${item.student_name}</p>
+                            <span class="badge bg-primary text-white px-3 py-2 rounded-pill">${item.category}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Modal Trigger Function
+        window.openModal = function(id) {
+            const cert = globalCertsMap[id];
+            if (!cert) return;
+
+            document.getElementById('modal-img').src = cert.student_photo || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop';
+            document.getElementById('modal-title').innerText = cert.title;
+            document.getElementById('modal-student').innerText = `Achieved by ${cert.student_name} (${cert.department})`;
+            document.getElementById('modal-category').innerText = cert.category;
+            
+            const descEl = document.getElementById('modal-desc');
+            if (cert.description) {
+                descEl.innerText = cert.description;
+                descEl.style.display = 'block';
+            } else {
+                descEl.style.display = 'none';
+            }
+
+            const docBtn = document.getElementById('modal-doc-btn');
+            if (cert.document_path) {
+                docBtn.href = cert.document_path;
+                docBtn.style.display = 'inline-block';
+            } else {
+                docBtn.style.display = 'none';
+            }
+
+            const certModal = new bootstrap.Modal(document.getElementById('certModal'));
+            certModal.show();
+        }
+
+        // Init
+        loadHomeData();
+    </script>
+</body>
+</html>

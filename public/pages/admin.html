@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - Wall of Fame</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root { --primary-color: #2563EB; --bg-color: #F3F4F6; --card-bg: #FFFFFF; --text-main: #1F2937; --border: #E5E7EB; --sidebar-bg: #1E3A8A; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        
+        .sidebar { width: 250px; background-color: var(--sidebar-bg); color: white; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #3B82F6; }
+        .sidebar-nav { flex: 1; padding: 1rem 0; }
+        .nav-item { padding: 1rem 1.5rem; color: #BFDBFE; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
+        .nav-item:hover, .nav-item.active { background-color: #1D4ED8; color: white; }
+        .nav-item.active { border-left-color: #FBBF24; }
+        .logout-btn { padding: 1rem 1.5rem; color: #FCA5A5; cursor: pointer; border-top: 1px solid #3B82F6; }
+
+        .main-content { flex: 1; padding: 2rem; overflow-y: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+        .chart-card { background: var(--card-bg); padding: 1rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); height: 410px; display: flex; justify-content: center; align-items: center; }
+        .chart-card canvas { max-height: 100%; max-width: 100%; }
+        .admin-table { width: 100%; border-collapse: collapse; background: var(--card-bg); box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; margin-top: 1rem; }
+        .admin-table th, .admin-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+        .admin-table th { background-color: #F9FAFB; }
+        
+        .btn-sm { padding: 0.4rem 0.8rem; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: 600; margin-right: 5px; margin-bottom: 5px;}
+        .bg-green { background: #10B981; } .bg-red { background: #EF4444; } .bg-blue { background: #3B82F6; } .bg-gold { background: #F59E0B; color: white; } .bg-gray { background: #6B7280; }
+        .pinned-badge { background: #FEF3C7; color: #D97706; padding: 2px 6px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; margin-left: 5px; }
+
+        /* --- ADMIN GRID VIEW STYLES --- */
+        .admin-grid { display: none; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1rem; }
+        .admin-card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); position: relative; transition: 0.2s; text-align: center; cursor: pointer; }
+        .admin-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.12); }
+        .admin-card-img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; background: #e2e8f0; }
+        
+        /* Floating Delete Button for Grid */
+        /* Floating Delete Button for Grid */
+        .delete-float-btn { position: absolute; bottom: 15px; right: 15px; background: #EF4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
+        .delete-float-btn:hover { background: #DC2626; transform: scale(1.05); }
+        .badge-domain { background: #3B82F6; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; }
+
+        /* Filter Section Styling */
+        #gridFilters { display: none; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; align-items: center; gap: 15px; }
+        .filter-input { padding: 8px; border: 1px solid #ccc; border-radius: 6px; width: 100%; }
+
+        /* --- LEADERBOARD STYLES --- */
+        .podium { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; justify-content: center; }
+        .podium-card { background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.08); transition: 0.2s; }
+        .podium-card:hover { transform: translateY(-5px); }
+        .podium-card h5 { margin: 5px 0; color: #1E3A8A; font-weight: bold; }
+        .gold { border-top: 5px solid gold; transform: scale(1.05); }
+        .silver { border-top: 5px solid silver; }
+        .bronze { border-top: 5px solid #cd7f32; }
+        .leaderboard-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
+        .rank { font-weight: 600; font-size: 1.2rem; }
+        /* --- LIKE BUTTON STYLES --- */
+        .achievement-card { position: relative; } /* Ensures the heart stays inside the card */
+        .like-btn { position: absolute; top: 15px; right: 15px; background: rgba(255, 255, 255, 0.95); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s; z-index: 5; color: #9CA3AF; }
+        .like-btn:hover { transform: scale(1.1); }
+        .like-btn.liked { color: #EF4444; } /* Red Heart */
+        .like-count { font-weight: 700; font-size: 0.95rem; margin-left: 5px; color: #374151; font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header"><h2>Admin Center</h2></div>
+        <div class="sidebar-nav">
+            <div class="nav-item active" onclick="switchTab('Dashboard')">📊 Dashboard</div>
+            <div class="nav-item" onclick="switchTab('Verified')">✅ Verified</div>
+            <div class="nav-item" onclick="switchTab('Rejected')">❌ Rejected</div>
+            <div class="nav-item" onclick="switchTab('Deleted')">🗑️ Deleted</div>
+            <div class="nav-item" onclick="switchTab('Leaderboard')">🏆 Leaderboard</div>
+            <div class="nav-item" onclick="switchTab('All Achievements')">🌐 All Achievements</div>
+            <div class="nav-item" style="border-top: 1px solid #3B82F6; margin-top: 10px;" onclick="openReportModal()">📄 Generate Report</div>
+        </div>
+        <div class="logout-btn" id="logoutBtn">🚪 Logout</div>
+    </div>
+
+    <div class="main-content">
+        <header><h1 id="pageTitle">Dashboard (Pending Requests)</h1></header>
+
+        <div class="chart-grid" id="analyticsSection">
+            <div class="chart-card"><canvas id="statusChart"></canvas></div>
+            <div class="chart-card"><canvas id="categoryChart"></canvas></div>
+        </div>
+
+        <div id="gridFilters">
+            <div style="flex:1;">
+                <label style="font-size: 12px; font-weight: bold; color: gray;">Search Student</label>
+                <input type="text" id="filter-student" class="filter-input" placeholder="Type name..." onkeyup="applyGridFilters()">
+            </div>
+            <div style="flex:1;">
+                <label style="font-size: 12px; font-weight: bold; color: gray;">Department</label>
+                <select id="filter-department" class="filter-input" onchange="applyGridFilters()">
+                    <option value="All">All Departments</option>
+                    <option value="Computer Engineering">Computer Engineering</option>
+                    <option value="Information Technology">Information Technology</option>
+                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                    <option value="Civil Engineering">Civil Engineering</option>
+                </select>
+            </div>
+            <div style="flex:1;">
+                <label style="font-size: 12px; font-weight: bold; color: gray;">Category</label>
+                <select id="filter-category" class="filter-input" onchange="applyGridFilters()">
+                    <option value="All">All Categories</option>
+                    <option value="Hackathon">Hackathon</option>
+                    <option value="Academics">Academics</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+
+        <table table class="admin-table" id="admin-table-view">
+            <thead>
+                <tr>
+                    <th>Student Info</th>
+                    <th>Achievement Details</th>
+                    <th>Files</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr><td colspan="4" style="text-align:center;">Loading requests...</td></tr>
+            </tbody>
+        </table>
+        
+        <div class="admin-grid" id="admin-grid-view"></div>
+        <div id="admin-leaderboard-view" style="display: none;">
+            <div class="podium" id="dynamic-podium"></div>
+            <div class="leaderboard-card">
+                <table class="admin-table" style="margin-top: 0;">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Student Name</th>
+                            <th>Uploaded Certificates</th>
+                            <th style="text-align: right;">Total Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <tr><td colspan="4" style="text-align:center;">Loading leaderboard...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="certModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center pt-0 px-4 pb-5">
+                    <img id="modal-img" src="" class="img-fluid rounded mb-4 shadow-sm" style="max-height: 350px; width: 100%; object-fit: cover; background: #e2e8f0;">
+                    <h3 id="modal-title" class="fw-bold mb-1"></h3>
+                    <p id="modal-student" class="text-muted fs-5 mb-3"></p>
+                    <div class="mb-4">
+                        <span id="modal-category" class="badge bg-primary px-3 py-2 rounded-pill fs-6"></span>
+                    </div>
+                    <p id="modal-desc" class="mb-4 text-start bg-light p-3 rounded text-muted" style="font-size: 0.95rem;"></p>
+                    <a id="modal-doc-btn" href="#" target="_blank" class="btn btn-success px-4 py-2 fw-bold">👁️ View Official Certificate</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index: 9999;">
+        <div style="background:white; padding:2rem; border-radius:12px; width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#1E3A8A;">Generate PDF Report</h3>
+            <p style="color:gray; font-size:14px; margin-bottom:20px;">Select a date range of at least 30 days.</p>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight:bold; display:block; margin-bottom:5px;">Start Date</label>
+                <input type="date" id="reportStartDate" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight:bold; display:block; margin-bottom:5px;">End Date</label>
+                <input type="date" id="reportEndDate" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc;">
+            </div>
+            
+            <div style="display:flex; justify-content:space-between;">
+                <button onclick="closeReportModal()" style="padding:10px 20px; border:none; border-radius:6px; cursor:pointer; background:#E5E7EB; color:#374151; font-weight:bold;">Cancel</button>
+                <button onclick="generatePDF()" style="padding:10px 20px; border:none; border-radius:6px; cursor:pointer; background:#10B981; color:white; font-weight:bold;">Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token || localStorage.getItem('role') !== 'admin') window.location.href = 'login.html';
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.clear(); window.location.href = 'login.html';
+        });
+
+        let allRequests = [];
+        let filteredGridData = [];
+        let currentTab = 'Pending'; 
+
+        async function loadData() {
+            try {
+                const reqRes = await fetch('/api/admin/all-requests', { headers: { 'Authorization': `Bearer ${token}` }});
+                allRequests = await reqRes.json();
+                
+                const statRes = await fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` }});
+                const stats = await statRes.json();
+                
+                drawCharts(stats);
+                
+                if(currentTab === 'All Achievements') {
+                    applyGridFilters(); 
+                } else {
+                    renderTable();
+                }
+            } catch (error) { console.error("Error:", error); }
+        }
+
+window.switchTab = function(tabName) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const table = document.getElementById('admin-table-view'); // Using the new ID!
+            const grid = document.getElementById('admin-grid-view');
+            const analytics = document.getElementById('analyticsSection');
+            const filters = document.getElementById('gridFilters');
+            const leaderboard = document.getElementById('admin-leaderboard-view'); // NEW
+
+            // Hide Everything Initially
+            analytics.style.display = 'none';
+            table.style.display = 'none';
+            grid.style.display = 'none';
+            filters.style.display = 'none';
+            leaderboard.style.display = 'none';
+
+            if (tabName === 'Dashboard') {
+                analytics.style.display = 'grid';
+                table.style.display = 'table';
+                document.getElementById('pageTitle').innerText = 'Dashboard (Pending Requests)';
+                currentTab = 'Pending';
+                renderTable();
+            } else if (tabName === 'All Achievements') {
+                grid.style.display = 'grid'; 
+                filters.style.display = 'flex'; 
+                document.getElementById('pageTitle').innerText = 'All Public Achievements';
+                currentTab = 'All Achievements';
+                
+                document.getElementById('filter-student').value = '';
+                document.getElementById('filter-department').value = 'All';
+                document.getElementById('filter-category').value = 'All';
+                applyGridFilters(); 
+            } else if (tabName === 'Leaderboard') {
+                // Show Leaderboard
+                leaderboard.style.display = 'block';
+                document.getElementById('pageTitle').innerText = 'Platform Leaderboard';
+                currentTab = 'Leaderboard';
+                loadAdminLeaderboard(); 
+            } else {
+                table.style.display = 'table';
+                document.getElementById('pageTitle').innerText = `${tabName} Achievements`;
+                currentTab = tabName;
+                renderTable();
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            
+            let filteredRequests = allRequests.filter(req => req.status === currentTab);
+            let currentPinCount = allRequests.filter(req => req.status === 'Verified' && (req.is_pinned == 1 || req.is_pinned === true)).length;
+
+            if (currentTab === 'Verified') {
+                filteredRequests.sort((a, b) => {
+                    if (a.is_pinned && !b.is_pinned) return -1;
+                    if (!a.is_pinned && b.is_pinned) return 1;
+                    return new Date(b.submission_date) - new Date(a.submission_date); 
+                });
+            }
+
+            if (filteredRequests.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No ${currentTab} requests found.</td></tr>`;
+                return;
+            }
+
+            filteredRequests.forEach(req => {
+                const tr = document.createElement('tr');
+                const isThisPinned = req.is_pinned == 1 || req.is_pinned === true;
+
+                if (isThisPinned && currentTab === 'Verified') tr.style.backgroundColor = '#FEF3C7'; 
+
+                const docLink = req.document_path ? `<a href="${req.document_path}" target="_blank">View Proof</a>` : 'No Proof';
+                let actionButtons = '';
+                let pointsDisplay = '';
+
+                if (currentTab === 'Pending') {
+                    actionButtons = `
+                        <button class="btn-sm bg-green" onclick="approveWithPoints(${req.id}, '${req.category}')">Approve</button>
+                        <button class="btn-sm bg-red" onclick="rejectWithFeedback(${req.id})">Reject</button>
+                    `;
+                } else if (currentTab === 'Verified') {
+                    pointsDisplay = `<br><span style="color:var(--primary-color); font-weight:bold;">🏆 Points: ${req.points}</span>`;
+                    const pinText = isThisPinned ? 'Unpin' : '📌 Pin to Top';
+                    const pinColor = isThisPinned ? 'bg-gray' : 'bg-gold';
+                    let buttonAction = `togglePin(${req.id})`;
+                    let buttonStyle = '';
+                    
+                    if (!isThisPinned && currentPinCount >= 6) {
+                        buttonAction = `alert('⚠️ Maximum of 6 achievements pinned! Unpin an older one first.')`;
+                        buttonStyle = 'opacity: 0.4; cursor: not-allowed;';
+                    }
+                    
+                    actionButtons = `
+                        <button class="btn-sm ${pinColor}" style="${buttonStyle}" onclick="${buttonAction}">${pinText}</button>
+                        <button class="btn-sm bg-red" onclick="softDeleteAchievement(${req.id})">Delete</button>
+                    `;
+                } else if (currentTab === 'Deleted') {
+                    // NEW: Add the Permanent Delete button next to Restore
+                    actionButtons = `
+                        <button class="btn-sm bg-blue" onclick="restoreAchievement(${req.id})">Restore</button>
+                        <button class="btn-sm bg-red" onclick="hardDeleteAchievement(${req.id})">Delete Permanently</button>
+                    `;
+                } else {
+                    actionButtons = `<button class="btn-sm bg-red" onclick="softDeleteAchievement(${req.id})">Delete</button>`;
+                }
+
+                const pinBadge = isThisPinned ? `<span class="pinned-badge">📌 Pinned</span>` : '';
+
+                tr.innerHTML = `
+                    <td><strong>${req.student_name}</strong><br><small>${req.department}</small></td>
+                    <td><strong>${req.title}</strong> ${pinBadge}<br><small>${req.category}</small>${pointsDisplay}</td>
+                    <td>${docLink}</td>
+                    <td>${actionButtons}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- GRID & FILTER LOGIC ---
+        window.applyGridFilters = function() {
+            const studentText = document.getElementById('filter-student').value.toLowerCase();
+            const deptVal = document.getElementById('filter-department').value;
+            const catVal = document.getElementById('filter-category').value;
+
+            // Only filter Verified achievements for the grid
+            const baseGridData = allRequests.filter(req => req.status === 'Verified');
+
+            filteredGridData = baseGridData.filter(cert => {
+                const matchStudent = (cert.student_name || '').toLowerCase().includes(studentText);
+                const matchDept = (deptVal === 'All' || cert.department === deptVal);
+                const matchCat = (catVal === 'All' || cert.category.includes(catVal)); 
+                return matchStudent && matchDept && matchCat;
+            });
+
+            renderGrid();
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('admin-grid-view');
+            grid.innerHTML = '';
+            
+            if (filteredGridData.length === 0) {
+                grid.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: gray;">No matching achievements found.</p>`;
+                return;
+            }
+
+            filteredGridData.forEach(req => {
+                const imgPath = req.student_photo || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600&auto=format&fit=crop';
+                
+                grid.innerHTML += `
+                    <div class="admin-card" onclick="openModal(${req.id})">
+                        <button class="delete-float-btn" onclick="event.stopPropagation(); softDeleteAchievement(${req.id})" title="Delete this card">Delete</button>
+                        
+                        <img src="${imgPath}" class="admin-card-img" alt="Photo">
+                        <h4 style="margin-bottom: 5px; font-size: 1.1rem; color: #1E3A8A;">${req.title}</h4>
+                        <p style="margin-bottom: 5px; font-weight: bold; color: #374151;">${req.student_name}</p>
+                        <p style="margin-bottom: 10px; font-size: 0.85rem; color: gray;">${req.department}</p>
+                        <span class="badge-domain">${req.category}</span>
+                    </div>
+                `;
+            });
+        }
+
+        // --- MODAL LOGIC ---
+        window.openModal = function(id) {
+            const cert = allRequests.find(r => r.id === id);
+            if (!cert) return;
+
+            document.getElementById('modal-img').src = cert.student_photo || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop';
+            document.getElementById('modal-title').innerText = cert.title;
+            document.getElementById('modal-student').innerText = `Achieved by ${cert.student_name} (${cert.department})`;
+            document.getElementById('modal-category').innerText = cert.category;
+            
+            const descEl = document.getElementById('modal-desc');
+            if (cert.description) {
+                descEl.innerText = cert.description;
+                descEl.style.display = 'block';
+            } else {
+                descEl.style.display = 'none';
+            }
+
+            const docBtn = document.getElementById('modal-doc-btn');
+            if (cert.document_path) {
+                docBtn.href = cert.document_path;
+                docBtn.style.display = 'inline-block';
+            } else {
+                docBtn.style.display = 'none';
+            }
+
+            const certModal = new bootstrap.Modal(document.getElementById('certModal'));
+            certModal.show();
+        }
+
+        // --- ADMIN ACTIONS ---
+        window.approveWithPoints = function(id, category) {
+            const userInput = prompt(`Assign points for this ${category} achievement.\nLeave blank to use default points:`, "");
+            if (userInput === null) return; 
+            let overridePts = undefined;
+            if (userInput.trim() !== "") {
+                overridePts = parseInt(userInput);
+                if(isNaN(overridePts)) return alert("Invalid number!");
+            }
+            verifyAchievement(id, 'Verified', category, null, overridePts);
+        };
+
+        window.verifyAchievement = async function(id, status, category = null, feedback = null, adminOverridePoints = undefined) {
+            try {
+                const response = await fetch(`/api/admin/verify/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ status, feedback, category, adminOverridePoints })
+                });
+                if (response.ok) loadData(); 
+            } catch (error) { console.error('Error:', error); }
+        };
+
+        window.rejectWithFeedback = function(id) {
+            const feedback = prompt("Reason for rejecting:");
+            if (feedback !== null) verifyAchievement(id, 'Rejected', null, feedback, undefined);
+        };
+
+        window.togglePin = async function(id) {
+            try {
+                const response = await fetch(`/api/admin/pin/${id}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.ok) { loadData(); } 
+                else { const data = await response.json(); alert("⚠️ " + data.error); }
+            } catch (error) { console.error('Error:', error); }
+        };
+
+        // NEW: Soft Delete
+        window.softDeleteAchievement = async function(id) {
+            if (!confirm("Move this achievement to the Deleted bin?")) return;
+            try {
+                const response = await fetch(`/api/admin/delete/${id}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.ok) loadData();
+            } catch (error) { console.error('Error:', error); }
+        };
+
+        // NEW: Restore
+        window.restoreAchievement = async function(id) {
+            if (!confirm("Restore this achievement to Verified status?")) return;
+            try {
+                const response = await fetch(`/api/admin/restore/${id}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.ok) loadData();
+            } catch (error) { console.error('Error:', error); }
+        };
+
+        // NEW: Permanent Hard Delete
+        window.hardDeleteAchievement = async function(id) {
+            if (!confirm("🚨 WARNING: This will permanently delete this achievement from the database. This action cannot be undone. Proceed?")) return;
+            try {
+                // This calls the original DELETE route you already have in server.js!
+                const response = await fetch(`/api/admin/achievements/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.ok) loadData();
+            } catch (error) { console.error('Error:', error); }
+        };
+
+        // --- CHARTS & REPORTS ---
+      // --- CHARTS & REPORTS ---
+        function drawCharts(data) {
+            // 1. Filter out 'Deleted' from the statuses so it doesn't show in the Doughnut chart
+            const activeStatuses = data.statuses.filter(item => item.status !== 'Deleted');
+            
+            const statusLabels = activeStatuses.map(item => item.status);
+            const statusCounts = activeStatuses.map(item => item.count);
+            const statusColors = { 'Verified': '#10B981', 'Pending': '#F59E0B', 'Rejected': '#EF4444' };
+            const bgColors = statusLabels.map(label => statusColors[label] || '#9CA3AF');
+
+            const chart1 = Chart.getChart("statusChart"); if(chart1) chart1.destroy();
+            const chart2 = Chart.getChart("categoryChart"); if(chart2) chart2.destroy();
+
+            // Doughnut Chart (with sizing options)
+            new Chart(document.getElementById('statusChart'), { 
+                type: 'doughnut', 
+                data: { labels: statusLabels, datasets: [{ data: statusCounts, backgroundColor: bgColors }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { position: 'right' } } // Moves legend to the right to save vertical space
+                }
+            });
+            
+            // Bar Chart (with sizing options)
+            const catLabels = data.categories.map(item => item.category);
+            const catCounts = data.categories.map(item => item.count);
+            new Chart(document.getElementById('categoryChart'), { 
+                type: 'bar', 
+                data: { labels: catLabels, datasets: [{ label: 'Submissions', data: catCounts, backgroundColor: '#3B82F6', borderRadius: 4 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } } // Hides the unnecessary "Submissions" legend 
+                }
+            });
+        }
+
+        window.openReportModal = () => document.getElementById('reportModal').style.display = 'flex';
+        window.closeReportModal = () => document.getElementById('reportModal').style.display = 'none';
+
+        // --- LEADERBOARD LOGIC ---
+        async function loadAdminLeaderboard() {
+            try {
+                // Reusing your existing backend leaderboard API!
+                const res = await fetch('/api/leaderboard');
+                const leaders = await res.json();
+                
+                // 1. Render Podium
+                const podium = document.getElementById('dynamic-podium');
+                podium.innerHTML = '';
+                
+                if (leaders.length >= 1) {
+                    if (leaders[1]) podium.innerHTML += `<div class="podium-card silver"><h3>🥈</h3><h5>${leaders[1].username}</h5><p style="color:gray; font-size:12px; margin:0; margin-bottom:5px;">${leaders[1].total_certificates} Uploads</p><span class="badge-domain">${leaders[1].total_points} pts</span></div>`;
+                    podium.innerHTML += `<div class="podium-card gold"><h3>🥇</h3><h5>${leaders[0].username}</h5><p style="color:gray; font-size:12px; margin:0; margin-bottom:5px;">${leaders[0].total_certificates} Uploads</p><span class="badge-domain" style="background:#F59E0B;">${leaders[0].total_points} pts</span></div>`;
+                    if (leaders[2]) podium.innerHTML += `<div class="podium-card bronze"><h3>🥉</h3><h5>${leaders[2].username}</h5><p style="color:gray; font-size:12px; margin:0; margin-bottom:5px;">${leaders[2].total_certificates} Uploads</p><span class="badge-domain" style="background:#cd7f32;">${leaders[2].total_points} pts</span></div>`;
+                }
+
+                // 2. Render Table
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = '';
+
+                leaders.forEach((u, index) => {
+                    let rank = index + 1;
+                    let displayRank = rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : rank;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="rank">${displayRank}</td>
+                            <td><strong>${u.username}</strong><br><small style="color:gray;">${u.domain}</small></td>
+                            <td><span style="background:#E5E7EB; color:#374151; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">${u.total_certificates} Certs</span></td>
+                            <td style="text-align: right; font-weight: bold; color: var(--primary-color); font-size: 1.1rem;">${u.total_points}</td>
+                        </tr>
+                    `;
+                });
+            } catch(e) { console.error("Admin Leaderboard Error:", e); }
+        }
+
+        // --- REPORT GENERATOR LOGIC (Restored) ---
+        window.openReportModal = () => document.getElementById('reportModal').style.display = 'flex';
+        window.closeReportModal = () => document.getElementById('reportModal').style.display = 'none';
+
+        window.generatePDF = async function() {
+            const startStr = document.getElementById('reportStartDate').value;
+            const endStr = document.getElementById('reportEndDate').value;
+
+            if (!startStr || !endStr) return alert("Please select both Start and End dates.");
+
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            if (diffDays < 30) return alert("⚠️ The report range must be at least 30 days.");
+            if (start > end) return alert("⚠️ Start Date cannot be after End Date.");
+
+            try {
+                const res = await fetch(`/api/admin/report-data?startDate=${startStr}&endDate=${endStr}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setFontSize(22);
+                doc.setTextColor(30, 58, 138);
+                doc.text("Wall of Scholars - Activity Report", 14, 20);
+                
+                doc.setFontSize(11);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Report Period: ${startStr} to ${endStr}`, 14, 28);
+                doc.text(`Total Achievements Uploaded: ${data.allAchievements.length}`, 14, 34);
+
+                let currentY = 45;
+
+                doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
+                doc.text("1. Top Achievers (Verified)", 14, currentY);
+                
+                const topAchieversBody = data.topAchievers.map((u, i) => [`#${i+1}`, u.username, u.domain, u.total_points]);
+                if (topAchieversBody.length === 0) topAchieversBody.push(["-", "No verified achievers in this period", "-", "-"]);
+                
+                doc.autoTable({
+                    startY: currentY + 5,
+                    head: [['Rank', 'Student Name', 'Branch/Domain', 'Points']],
+                    body: topAchieversBody,
+                    theme: 'grid',
+                    headStyles: { fillColor: [245, 158, 11] }
+                });
+                
+                currentY = doc.lastAutoTable.finalY + 15;
+
+                doc.setFontSize(16);
+                doc.text("2. Uploads by Department & Category", 14, currentY);
+                
+                doc.autoTable({
+                    startY: currentY + 5, margin: { right: 110 },
+                    head: [['Department', 'Uploads']], body: data.deptStats.map(d => [d.department, d.count]), theme: 'striped'
+                });
+
+                doc.autoTable({
+                    startY: currentY + 5, margin: { left: 110 },
+                    head: [['Category', 'Uploads']], body: data.catStats.map(c => [c.category, c.count]), theme: 'striped'
+                });
+
+                currentY = Math.max(doc.lastAutoTable.finalY, currentY + 20) + 15;
+
+                doc.setFontSize(16);
+                doc.text("3. All Uploaded Achievements Log", 14, currentY);
+                
+                const allAcheivementsBody = data.allAchievements.map(a => [
+                    a.date.split('T')[0], a.student_name, a.department, a.category, a.title, a.status
+                ]);
+
+                doc.autoTable({
+                    startY: currentY + 5,
+                    head: [['Date', 'Student Name', 'Department', 'Category', 'Achievement Title', 'Status']],
+                    body: allAcheivementsBody.length > 0 ? allAcheivementsBody : [["No data found", "", "", "", "", ""]],
+                    theme: 'grid', styles: { fontSize: 9 }, headStyles: { fillColor: [30, 58, 138] }
+                });
+
+                doc.save(`WallOfScholars_Report_${startStr}_to_${endStr}.pdf`);
+                closeReportModal();
+
+            } catch (err) {
+                console.error(err);
+                alert("Failed to generate report.");
+            }
+        };
+        loadData();
+    </script>
+</body>
+</html>

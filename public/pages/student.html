@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wall Of Scholars - Student Portal</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; margin: 0; background: #f8fafc; padding-top: 76px; }
+
+        .podium-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #e2e8f0; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); background: #f8fafc; }
+        .winner .podium-img { width: 100px; height: 100px; border-color: gold; border-width: 4px; }
+
+        /* --- AVATAR STYLES --- */
+        .avatar-podium { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 10px; background: #e2e8f0; }
+        .avatar-table { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 15px; vertical-align: middle; background: #e2e8f0; }
+        .profile-img-large { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color); box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
+
+        /* --- SPA TABS --- */
+        .tab-section { display: none; animation: fadeIn 0.3s; }
+        .tab-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- NAVBAR --- */
+        .glass { background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .nav-link { cursor: pointer; }
+        .nav-link.active { color: #070707 !important; font-weight: 600; border-bottom: 2px solid #22c55e; } 
+        
+        /* --- HERO --- */
+        .hero { padding: 100px 0 80px; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: white; }
+        .hero h1 { font-size: 48px; font-weight: 700; }
+        .hero span { color: #ffd700; }
+        .hero-text { margin: 20px 0; font-size: 18px; }
+        .hero-img { width: 100%; max-width: 500px; height: auto; border-radius: 15px; }
+
+        /* --- SECTIONS --- */
+        .section { padding: 80px 0; min-height: 80vh; }
+        .gray { background: #f1f5f9; }
+        .section-title { text-align: center; font-weight: 600; margin-bottom: 50px; }
+
+        /* --- CARDS --- */
+        .achiever-card { background: white; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.08); transition: 0.3s; height: 100%; }
+        .achiever-card:hover { transform: translateY(-6px); }
+        .winner { border: 2px solid gold; transform: scale(1.05); }
+        .rank { font-size: 40px; margin-bottom: 10px; }
+
+        .achievement-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); transition: 0.3s; height: 100%; cursor: pointer; }
+        .achievement-card:hover { transform: translateY(-6px); box-shadow: 0 15px 25px rgba(0,0,0,0.15); }
+        .achievement-img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; background: #e2e8f0; }
+        .student-name { font-weight: 600; margin: 5px 0; color: #0f2027; }
+        .event-name { color: gray; font-size: 14px; }
+
+        .cert-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); height: 100%; border-left: 4px solid #2563eb; }
+        
+        /* --- STATS --- */
+        .stats { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: white; padding: 70px 0; }
+        .stats h2 { font-size: 40px; color: #ffd700; }
+        
+        /* --- FORMS & TABLES --- */
+        .custom-form { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .table-container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+
+        /* --- NEW LEADERBOARD CSS --- */
+        .user-rank { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); margin-bottom: 40px; text-align: center; }
+        .user-score { font-size: 24px; font-weight: 700; color: #0d6efd; }
+        
+        .podium { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 50px; justify-content: center; }
+        .podium-card { background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.08); transition: 0.2s; }
+        .podium-card:hover { transform: translateY(-5px); }
+        .podium-card h5 { margin: 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .gold { border-top: 5px solid gold; transform: scale(1.05); }
+        .silver { border-top: 5px solid silver; }
+        .bronze { border-top: 5px solid #cd7f32; }
+        
+        .leaderboard-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); overflow-x: auto; }
+        .rank { font-weight: 600; }
+        .highlight { background: #e9f2ff !important; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top glass">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold" href="#">Wall Of Scholars</a>
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="nav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link active" onclick="switchTab('home')">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchTab('upload')">Upload Certificate</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchTab('achievements')">All Achievements</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchTab('leaderboard')">Leaderboard</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchTab('mycerts')">My Certificates</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchTab('profile')">My Profile</a></li>
+                    <li class="nav-item"><button class="btn btn-danger ms-3" id="logoutBtn">Logout</button></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="home" class="tab-section active">
+        
+        <section class="hero">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6 mb-4 mb-lg-0">
+                        <h1>Showcase Your <span>Achievements</span></h1>
+                        <p class="hero-text">A platform to recognize student excellence, highlight achievements, and inspire the next generation.</p>
+                        <button class="btn btn-main" onclick="switchTab('upload')">Get Started</button>
+                    </div>
+                    <div class="col-lg-6 text-center">
+                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1000&auto=format&fit=crop" class="hero-img" alt="Students">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">Top Achievers</h2>
+                <div class="row g-4 justify-content-center" id="podium-container">
+                    <div class="text-center text-muted">Loading top scholars...</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section gray">
+            <div class="container">
+                <h2 class="section-title">Wall of Fame</h2>
+                <div class="row g-4" id="wall-of-fame-grid">
+                    <div class="text-center text-muted">Loading achievements...</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">Recommended Certifications <br><small class="text-muted fs-6" id="user-domain-text"></small></h2>
+                <div class="row g-4" id="recommendations-grid">
+                    <div class="text-center text-muted">Loading recommendations...</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats">
+            <div class="container">
+                <div class="row text-center">
+                    <div class="col-md-6 mb-4 mb-md-0">
+                        <h2 id="stat-certs">0</h2>
+                        <p>Total Verified Certificates</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h2 id="stat-papers">0</h2>
+                        <p>Research Papers & Academics</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="upload" class="tab-section section gray">
+        <div class="container">
+            <h2 class="section-title">Upload Certificate</h2>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <form id="achievementForm" class="custom-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Your Full Name</label>
+                            <input type="text" class="form-control" id="student_name" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Department</label>
+                                <select class="form-select" id="department" required>
+                                    <option value="Computer Engineering">Computer Engineering</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Category</label>
+                                <select class="form-select" id="category" required>
+                                    <option value="Hackathon">Hackathon / Technical </option>
+                                    <option value="Academics">Academics / Research </option>
+                                    <option value="Sports">Sports </option>
+                                    <option value="Cultural">Cultural</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Achievement Title</label>
+                            <input type="text" class="form-control" id="title" placeholder="e.g. 1st Place Smart India Hackathon" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Description (Optional)</label>
+                            <textarea class="form-control" id="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Your Photo (For Wall of Fame) max(10MB)</label>
+                            <input type="file" class="form-control" id="photo" accept="image/*">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Proof Document (PDF/Image) max(10MB)</label>
+                            <input type="file" class="form-control" id="document" accept=".pdf,image/*" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold fs-5">Submit for Review</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="achievements" class="tab-section section gray">
+        <div class="container">
+            <h2 class="section-title">All Approved Achievements</h2>
+            
+            <div class="row g-3 mb-5 bg-white p-4 rounded-3 shadow-sm align-items-center">
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Search Student</label>
+                    <input type="text" id="filter-student" class="form-control" placeholder="Type a name..." onkeyup="applyFilters()">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Filter by Department</label>
+                    <select id="filter-department" class="form-select" onchange="applyFilters()">
+                        <option value="All">All Departments</option>
+                        <option value="Computer Engineering">Computer Engineering</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Filter by Category</label>
+                    <select id="filter-category" class="form-select" onchange="applyFilters()">
+                        <option value="All">All Categories</option>
+                        <option value="Hackathon">Hackathon</option>
+                        <option value="Academics">Academics</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Cultural">Cultural</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-4" id="all-certs-grid">
+            </div>
+
+            <div class="text-center mt-5">
+                <button id="see-more-btn" class="btn btn-outline-primary px-5 py-2 fw-bold" onclick="loadMoreCerts()" style="display: none;">
+                    Load More Achievements ↓
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="leaderboard" class="tab-section section">
+        <div class="container">
+            <h2 class="section-title" style="margin-top: 20px;">Leaderboard</h2>
+
+            <div class="user-rank">
+                <h5>Your Position</h5>
+                <div class="user-score" id="my-rank-display">Loading...</div>
+                <p class="text-muted mb-0">Upload more achievements to improve your ranking.</p>
+            </div>
+
+            <div class="podium" id="dynamic-podium">
+            </div>
+
+            <div class="leaderboard-card">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Rank</th>
+                            <th>Student</th>
+                            <th>Certificates</th>
+                            <th class="text-end">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="mycerts" class="tab-section section gray">
+        <div class="container">
+            <h2 class="section-title">My Uploads & Status</h2>
+            <div class="table-container">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Achievement Title</th>
+                            <th>Category</th>
+                            <th>Date Submitted</th>
+                            <th>Status / Feedback</th>
+                            <th>View Document</th>
+                        </tr>
+                    </thead>
+                    <tbody id="my-certs-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile" class="tab-section section gray">
+        <div class="container text-center">
+            <h2 class="section-title">My Profile</h2>
+            <div class="custom-form mx-auto" style="max-width: 500px;">
+                <img id="profile-page-img" src="" class="profile-img-large" alt="Profile Picture">
+                <h3 id="profile-page-name" class="fw-bold mb-1">Loading...</h3>
+                <p id="profile-page-email" class="text-muted mb-4">loading@email.com</p>
+                
+                <form id="avatarForm">
+                    <div class="mb-3 text-start">
+                        <label class="form-label fw-semibold">Update Profile Picture</label>
+                        <input type="file" class="form-control" id="avatarInput" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Upload New Picture</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="certModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center pt-0 px-4 pb-5">
+                    <img id="modal-img" src="" class="img-fluid rounded mb-4 shadow-sm" style="max-height: 350px; width: 100%; object-fit: cover; background: #e2e8f0;">
+                    
+                    <h3 id="modal-title" class="fw-bold mb-1"></h3>
+                    <p id="modal-student" class="text-muted fs-5 mb-3"></p>
+                    
+                    <div class="mb-4">
+                        <span id="modal-category" class="badge bg-primary px-3 py-2 rounded-pill fs-6"></span>
+                    </div>
+                    
+                    <p id="modal-desc" class="mb-4 text-start bg-light p-3 rounded text-muted" style="font-size: 0.95rem;"></p>
+                    
+                    <a id="modal-doc-btn" href="#" target="_blank" class="btn btn-success px-4 py-2 fw-bold">👁️ View Official Certificate</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title fw-bold text-dark">✏️ Edit & Resubmit Achievement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editForm">
+                        <div class="alert alert-danger small" id="edit-feedback-alert">
+                            <strong>Admin Feedback:</strong> <span id="edit-admin-feedback"></span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Department</label>
+                                <select class="form-select" id="edit_department" required>
+                                    <option value="Computer Engineering">Computer Engineering</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Category</label>
+                                <select class="form-select" id="edit_category" required>
+                                    <option value="Hackathon">Hackathon / Technical</option>
+                                    <option value="Academics">Academics / Research</option>
+                                    <option value="Sports">Sports </option>
+                                    <option value="Cultural">Cultural </option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Achievement Title</label>
+                            <input type="text" class="form-control" id="edit_title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Description (Optional)</label>
+                            <textarea class="form-control" id="edit_description" rows="3"></textarea>
+                        </div>
+                        
+                        <hr>
+                        <p class="text-muted small mb-3">Leave file inputs empty to keep your previously uploaded files.</p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Update Photo (Optional)</label>
+                            <input type="file" class="form-control" id="edit_photo" accept="image/*">
+                            <small class="text-muted d-block mt-1" id="current_photo_display"></small> 
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Update Proof Document (Optional)</label>
+                            <input type="file" class="form-control" id="edit_document" accept=".pdf,image/*">
+                            <small class="text-muted d-block mt-1" id="current_document_display"></small>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100 py-2 fw-bold fs-5">Resubmit for Review</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let myCertsMap = {}; 
+        let currentEditId = null; 
+        let allPublicCerts = []; 
+        let filteredCerts = [];
+        let visibleCount = 12; 
+        let globalCertsMap = {}; 
+        const token = localStorage.getItem('token');
+        
+        if (!token) window.location.href = 'login.html';
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.clear(); 
+            window.location.href = '../index.html'; 
+        });
+
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            document.querySelectorAll('.nav-link').forEach(nav => nav.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const navbarCollapse = document.getElementById('nav');
+            if (navbarCollapse.classList.contains('show')) {
+                new bootstrap.Collapse(navbarCollapse).toggle();
+            }
+
+            if(tabId === 'home') loadHomeData();
+            if(tabId === 'achievements') loadAllCerts();
+            if(tabId === 'leaderboard') loadLeaderboard();
+            if(tabId === 'mycerts') loadMyCerts();
+            if(tabId === 'profile') loadUserProfile();
+        }
+
+        window.openEditModal = function(id) {
+            const cert = myCertsMap[id];
+            if (!cert) return;
+            
+            currentEditId = id; 
+
+            document.getElementById('edit-admin-feedback').innerText = cert.admin_feedback || "Please correct your submission.";
+
+            document.getElementById('edit_department').value = cert.department || 'Computer Engineering';
+            document.getElementById('edit_category').value = cert.category || 'Other';
+            document.getElementById('edit_title').value = cert.title || '';
+            document.getElementById('edit_description').value = cert.description || '';
+            
+            document.getElementById('edit_photo').value = '';
+            document.getElementById('edit_document').value = '';
+
+            const photoDisplay = document.getElementById('current_photo_display');
+            if (cert.student_photo) {
+                photoDisplay.innerHTML = `🖼️ <strong>Current Photo:</strong> <a href="${cert.student_photo}" target="_blank" class="text-decoration-none">View File</a> <span class="text-secondary">(Leave empty to keep)</span>`;
+            } else {
+                photoDisplay.innerHTML = `No photo uploaded previously.`;
+            }
+
+            const docDisplay = document.getElementById('current_document_display');
+            if (cert.document_path) {
+                docDisplay.innerHTML = `📄 <strong>Current Document:</strong> <a href="${cert.document_path}" target="_blank" class="text-decoration-none">View File</a> <span class="text-secondary">(Leave empty to keep)</span>`;
+            } else {
+                docDisplay.innerHTML = `No document uploaded previously.`;
+            }
+
+            const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            editModal.show();
+        }
+
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('department', document.getElementById('edit_department').value);
+            formData.append('category', document.getElementById('edit_category').value);
+            formData.append('title', document.getElementById('edit_title').value);
+            formData.append('description', document.getElementById('edit_description').value);
+            
+            if(document.getElementById('edit_photo').files[0]) formData.append('photo', document.getElementById('edit_photo').files[0]);
+            if(document.getElementById('edit_document').files[0]) formData.append('document', document.getElementById('edit_document').files[0]);
+
+            try {
+                const res = await fetch(`/api/achievements/${currentEditId}`, { 
+                    method: 'PUT', 
+                    headers: { 'Authorization': `Bearer ${token}` }, 
+                    body: formData 
+                });
+                
+                if (res.ok) {
+                    alert("Success! Achievement resubmitted.");
+                    const modalElement = document.getElementById('editModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                    modalInstance.hide();
+                    loadMyCerts();
+                } else {
+                    alert("Resubmission failed.");
+                }
+            } catch(e) { alert("Error resubmitting."); console.error(e); }
+        });
+
+        async function loadUserProfile() {
+            try {
+                const res = await fetch('/api/student/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                const user = await res.json();
+                
+                document.getElementById('profile-page-name').innerText = user.username;
+                document.getElementById('profile-page-email').innerText = user.email;
+                document.getElementById('profile-page-img').src = user.profile_pic || `https://ui-avatars.com/api/?name=${user.username}&background=random&color=fff&size=256`;
+            } catch(e) { console.error(e); }
+        }
+
+        document.getElementById('avatarForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('avatarInput').files[0];
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            try {
+                const res = await fetch('/api/student/profile-pic', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    alert("Profile picture updated!");
+                    loadUserProfile(); 
+                } else {
+                    alert(data.error);
+                }
+            } catch(e) { alert("Error uploading picture."); }
+        });
+
+        async function loadHomeData() {
+            try {
+                const statRes = await fetch('/api/stats');
+                const stats = await statRes.json();
+                document.getElementById('stat-certs').innerText = (stats.certificates || 0) + "+";
+                document.getElementById('stat-papers').innerText = (stats.research_papers || 0) + "+";
+            } catch(e) {}
+
+            try {
+                const leadRes = await fetch('/api/leaderboard');
+                const leaders = await leadRes.json();
+                const podium = document.getElementById('podium-container');
+                podium.innerHTML = '';
+                
+                const getAvatar = (u) => u.profile_pic || `https://ui-avatars.com/api/?name=${u.username}&background=random&color=fff&size=128`;
+
+                if(leaders.length > 0) {
+                    const top3 = [leaders[1], leaders[0], leaders[2]].filter(Boolean); 
+                    top3.forEach(user => {
+                        let isWinner = user === leaders[0] ? 'winner' : '';
+                        let rankIcon = user === leaders[0] ? '🥇' : (user === leaders[1] ? '🥈' : '🥉');
+                        
+                        podium.innerHTML += `
+                            <div class="col-md-4 col-sm-6">
+                                <div class="achiever-card ${isWinner}">
+                                    <div class="rank">${rankIcon}</div>
+                                    <img src="${getAvatar(user)}" class="podium-img" alt="${user.username}">
+                                    <h4>${user.username}</h4>
+                                    <p class="text-success fw-bold">${user.total_points} Points</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    podium.innerHTML = '<p class="text-center">Awaiting first approvals!</p>';
+                }
+            } catch(e) {}
+
+            try {
+                const certRes = await fetch('/api/achievements/public');
+                const certs = await certRes.json();
+                
+                certs.forEach(cert => globalCertsMap[cert.id] = cert);
+                const pinnedCerts = certs.filter(cert => cert.is_pinned === 1 || cert.is_pinned === true);
+                
+                renderCards(pinnedCerts.slice(0, 6), 'wall-of-fame-grid');
+            } catch(e) { console.error("Wall of Fame Error:", e); }
+
+            document.getElementById('user-domain-text').innerText = "Highly Valued Industry Certifications";
+            const recGrid = document.getElementById('recommendations-grid');
+            
+            const topCerts = [
+                { title: "Infosys Springboard Certifications", provider: "Infosys", link: "https://infyspringboard.onwingspan.com/", badge: "Free for Students", color: "#0d6efd" },
+                { title: "Google Data Analytics Professional", provider: "Google", link: "https://grow.google/certificates/data-analytics/", badge: "Highly Rated", color: "#10b981" },
+                { title: "AWS Certified Cloud Practitioner", provider: "Amazon Web Services", link: "https://aws.amazon.com/certification/certified-cloud-practitioner/", badge: "Cloud Computing", color: "#f59e0b" },
+                { title: "Meta Front-End Developer", provider: "Meta", link: "https://www.coursera.org/professional-certificates/meta-front-end-developer", badge: "Web Dev", color: "#0dcaf0" },
+                { title: "IBM Data Science Professional", provider: "IBM", link: "https://www.coursera.org/professional-certificates/ibm-data-science", badge: "AI & Data", color: "#1e3a8a" },
+                { title: "Google IT Support Professional", provider: "Google", link: "https://grow.google/certificates/it-support/", badge: "Beginner Friendly", color: "#10b981" }
+            ];
+
+            recGrid.innerHTML = '';
+            topCerts.forEach(cert => {
+                recGrid.innerHTML += `
+                    <div class="col-md-4">
+                        <div class="cert-card" style="border-left: 4px solid ${cert.color};">
+                            <h5 class="fw-bold mb-1" style="font-size: 1.1rem;">${cert.title}</h5>
+                            <p class="text-muted mb-2 small">Provided by <strong>${cert.provider}</strong></p>
+                            <span class="badge bg-dark text-white mb-3">${cert.badge}</span><br>
+                            <a href="${cert.link}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold w-100" style="transition: 0.2s;">🔗 Explore Course</a>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function loadAllCerts() {
+            try {
+                const res = await fetch('/api/achievements/public');
+                allPublicCerts = await res.json();
+                allPublicCerts.forEach(cert => globalCertsMap[cert.id] = cert);
+                
+                document.getElementById('filter-student').value = '';
+                document.getElementById('filter-department').value = 'All';
+                document.getElementById('filter-category').value = 'All';
+                
+                applyFilters();
+            } catch(e) { console.error("Error:", e); }
+        }
+
+        window.applyFilters = function() {
+            const studentText = document.getElementById('filter-student').value.toLowerCase();
+            const deptVal = document.getElementById('filter-department').value;
+            const catVal = document.getElementById('filter-category').value;
+
+            filteredCerts = allPublicCerts.filter(cert => {
+                const matchStudent = (cert.student_name || '').toLowerCase().includes(studentText);
+                const matchDept = (deptVal === 'All' || cert.department === deptVal);
+                const matchCat = (catVal === 'All' || cert.category.includes(catVal)); 
+                return matchStudent && matchDept && matchCat;
+            });
+
+            visibleCount = 12; 
+            displayFilteredCerts();
+        }
+
+        window.displayFilteredCerts = function() {
+            const certsToShow = filteredCerts.slice(0, visibleCount);
+            renderCards(certsToShow, 'all-certs-grid');
+
+            const seeMoreBtn = document.getElementById('see-more-btn');
+            if (filteredCerts.length > visibleCount) {
+                seeMoreBtn.style.display = 'inline-block';
+            } else {
+                seeMoreBtn.style.display = 'none';
+            }
+        }
+
+        window.loadMoreCerts = function() {
+            visibleCount += 12; 
+            displayFilteredCerts(); 
+        }
+
+        function renderCards(dataArray, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            if(!dataArray || dataArray.length === 0) {
+                container.innerHTML = '<p class="text-center w-100 mt-4 text-muted">No achievements found.</p>'; 
+                return;
+            }
+            
+            dataArray.forEach(item => {
+                const imgPath = item.student_photo || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600&auto=format&fit=crop';
+                
+                container.innerHTML += `
+                    <div class="col-md-4">
+                        <div class="achievement-card text-center" onclick="openModal(${item.id})">
+                            <img src="${imgPath}" class="achievement-img" alt="Photo">
+                            <h5 class="mt-3 fw-bold">${item.title}</h5>
+                            <p class="student-name">${item.student_name}</p>
+                            <span class="badge bg-primary text-white px-3 py-2 rounded-pill">${item.category}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const res = await fetch('/api/leaderboard');
+                const leaders = await res.json();
+                
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const myId = payload.id;
+
+                let myRankText = "Unranked";
+                let myScore = 0;
+
+                const podium = document.getElementById('dynamic-podium');
+                podium.innerHTML = '';
+                
+                const getAvatar = (u) => u.profile_pic || `https://ui-avatars.com/api/?name=${u.username}&background=random&color=fff&size=128`;
+
+                if (leaders.length >= 1) {
+                    if (leaders[1]) podium.innerHTML += `
+                        <div class="podium-card silver">
+                            <img src="${getAvatar(leaders[1])}" class="avatar-podium">
+                            <h3>🥈</h3><h5>${leaders[1].username}</h5>
+                            <p class="text-muted">${leaders[1].total_certificates} Uploads</p><strong>${leaders[1].total_points} pts</strong>
+                        </div>`;
+                    podium.innerHTML += `
+                        <div class="podium-card gold">
+                            <img src="${getAvatar(leaders[0])}" class="avatar-podium" style="border-color: gold;">
+                            <h3>🥇</h3><h5>${leaders[0].username}</h5>
+                            <p class="text-muted">${leaders[0].total_certificates} Uploads</p><strong>${leaders[0].total_points} pts</strong>
+                        </div>`;
+                    if (leaders[2]) podium.innerHTML += `
+                        <div class="podium-card bronze">
+                            <img src="${getAvatar(leaders[2])}" class="avatar-podium">
+                            <h3>🥉</h3><h5>${leaders[2].username}</h5>
+                            <p class="text-muted">${leaders[2].total_certificates} Uploads</p><strong>${leaders[2].total_points} pts</strong>
+                        </div>`;
+                }
+
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = '';
+
+                leaders.forEach((u, index) => {
+                    let rank = index + 1;
+                    let isMe = (u.id === myId);
+                    if (isMe) { myRankText = `Rank #${rank}`; myScore = u.total_points; }
+
+                    let rowClass = isMe ? 'highlight' : '';
+                    let displayRank = rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : rank;
+                    let displayName = isMe ? `${u.username} <strong>(You)</strong>` : u.username;
+
+                    tbody.innerHTML += `
+                        <tr class="${rowClass}">
+                            <td class="rank">${displayRank}</td>
+                            <td><img src="${getAvatar(u)}" class="avatar-table"> ${displayName}</td>
+                            <td><span class="badge bg-secondary rounded-pill px-3">${u.total_certificates} Certs</span></td>
+                            <td class="text-end fw-bold text-primary">${u.total_points}</td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('my-rank-display').innerHTML = 
+                    myRankText !== "Unranked" ? `${myRankText} • ${myScore} Points` : `Unranked • 0 Points`;
+
+            } catch(e) { console.error("Leaderboard Error:", e); }
+        }
+
+        async function loadMyCerts() {
+            try {
+                const res = await fetch('/api/student/my-requests', { headers: { 'Authorization': `Bearer ${token}` } });
+                const certs = await res.json();
+                const tbody = document.getElementById('my-certs-body');
+                tbody.innerHTML = '';
+                
+                myCertsMap = {}; 
+                
+                if(certs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">You haven\'t uploaded anything yet.</td></tr>'; return;
+                }
+
+                certs.forEach(req => {
+                    myCertsMap[req.id] = req; 
+
+                    let badgeClass = req.status === 'Verified' ? 'bg-success' : (req.status === 'Rejected' ? 'bg-danger' : 'bg-warning text-dark');
+                    let feedbackHtml = req.admin_feedback ? `<div class="mt-2 text-danger small"><strong>Admin:</strong> ${req.admin_feedback}</div>` : '';
+                    
+                    let actionButtons = req.document_path 
+                        ? `<a href="${req.document_path}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold">👁️ View</a>` 
+                        : `<span class="text-muted small">No File</span>`;
+                    
+                    if (req.status === 'Rejected') {
+                        actionButtons += ` <button class="btn btn-sm btn-warning fw-bold ms-2" onclick="openEditModal(${req.id})">✏️ Edit</button>`;
+                    }
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="fw-bold">${req.title}</td>
+                            <td>${req.category}</td>
+                            <td>${new Date(req.submission_date).toLocaleDateString()}</td>
+                            <td>
+                                <span class="badge ${badgeClass}">${req.status}</span>
+                                ${feedbackHtml}
+                            </td>
+                            <td>${actionButtons}</td> 
+                        </tr>
+                    `;
+                });
+            } catch(e) { console.error("Error loading my certs:", e); }
+        }
+
+        document.getElementById('achievementForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('student_name', document.getElementById('student_name').value);
+            formData.append('department', document.getElementById('department').value);
+            formData.append('category', document.getElementById('category').value);
+            formData.append('title', document.getElementById('title').value);
+            formData.append('description', document.getElementById('description').value);
+            if(document.getElementById('photo').files[0]) formData.append('photo', document.getElementById('photo').files[0]);
+            formData.append('document', document.getElementById('document').files[0]);
+
+            try {
+                const res = await fetch('/api/achievements', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+                if (res.ok) {
+                    alert("Success! Your achievement has been submitted to the Admin.");
+                    document.getElementById('achievementForm').reset();
+                    document.querySelector('.nav-link[onclick="switchTab(\'mycerts\')"]').click();
+                } else {
+                    alert("Submission failed. Please try again.");
+                }
+            } catch(e) { alert("Error submitting."); }
+        });
+
+        loadHomeData();
+
+        window.openModal = function(id) {
+            const cert = globalCertsMap[id];
+            if (!cert) return;
+
+            document.getElementById('modal-img').src = cert.student_photo || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop';
+            document.getElementById('modal-title').innerText = cert.title;
+            document.getElementById('modal-student').innerText = `Achieved by ${cert.student_name} (${cert.department})`;
+            document.getElementById('modal-category').innerText = cert.category;
+            
+            const descEl = document.getElementById('modal-desc');
+            if (cert.description) {
+                descEl.innerText = cert.description;
+                descEl.style.display = 'block';
+            } else {
+                descEl.style.display = 'none';
+            }
+
+            const docBtn = document.getElementById('modal-doc-btn');
+            if (cert.document_path) {
+                docBtn.href = cert.document_path;
+                docBtn.style.display = 'inline-block';
+            } else {
+                docBtn.style.display = 'none';
+            }
+
+            const certModal = new bootstrap.Modal(document.getElementById('certModal'));
+            certModal.show();
+        }
+    </script>
+</body>
+</html>

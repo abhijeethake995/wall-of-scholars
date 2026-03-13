@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Wall of Fame</title>
+    <style>
+        /* --- INTERNAL CSS --- */
+        :root { --primary-color: #2563EB; --primary-hover: #1D4ED8; --bg-color: #F3F4F6; --card-bg: #FFFFFF; --text-main: #1F2937; --text-muted: #6B7280; --border: #E5E7EB; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; }
+        
+        header { background-color: var(--card-bg); padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        header h1 { color: var(--primary-color); font-size: 1.5rem; }
+        nav a { text-decoration: none; color: var(--text-main); margin-left: 1.5rem; font-weight: 500; transition: color 0.2s; }
+        nav a:hover { color: var(--primary-color); }
+
+        .auth-container { display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 1rem; }
+        .auth-card { background: var(--card-bg); padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        .auth-card h2 { margin-bottom: 1.5rem; text-align: center; color: var(--text-main); }
+        
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        .form-group input { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 1rem; }
+        .form-group input:focus { border-color: var(--primary-color); }
+        
+        .btn { width: 100%; padding: 0.75rem; background-color: var(--primary-color); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 1rem; }
+        .btn:hover { background-color: var(--primary-hover); }
+        
+        .link-text { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); }
+        .link-text a { color: var(--primary-color); text-decoration: none; font-weight: 600; }
+        .link-text a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Wall of Fame</h1>
+        <nav>
+            <a href="../index.html">Home</a>
+        </nav>
+    </header>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2>Student Registration</h2>
+            <form id="signupForm">
+                <div class="form-group">
+                    <label>Choose a Username</label>
+                    <input type="text" id="reg-username" required>
+                </div>
+                
+              <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="reg-email" placeholder="your.name@gmail.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Create a Password</label>
+                    <input type="password" id="reg-password" required>
+                </div>
+                <button type="submit" class="btn">Register</button>
+            </form>
+            
+            <p class="link-text">
+                Already have an account? <a href="login.html">Log in</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value; // Grab the new email field
+            const password = document.getElementById('reg-password').value;
+            
+            try {
+                // Send registration data to the backend (Now including the email!)
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Registration successful! verify your mail so You can now log in.');
+                    window.location.href = 'login.html';
+                } else {
+                    alert(data.error || 'Registration failed.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Server error. Is your Node.js backend running?');
+            }
+        });
+    </script>
+</body>
+</html>
