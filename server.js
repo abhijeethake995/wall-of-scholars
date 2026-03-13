@@ -21,17 +21,14 @@ app.use('/uploads', express.static('uploads'));
 
 // --- EMAIL TRANSPORTER SETUP ---
 // --- BULLETPROOF EMAIL TRANSPORTER SETUP ---
+// --- EMAIL CONFIGURATION ---
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
-    secure: true, // Use SSL
+    secure: true, // true for 465, false for other ports
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-    },
-    // Sometimes local networks or antiviruses block the connection, this helps bypass that:
-    tls: {
-        rejectUnauthorized: false 
     }
 });
 
