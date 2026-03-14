@@ -14,7 +14,7 @@ if (!fs.existsSync('./uploads')) {
 }
 // ---------------------------------------
 
-const bcrypt = require('bcrypt'); // You already have this line
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('./config/db'); 
