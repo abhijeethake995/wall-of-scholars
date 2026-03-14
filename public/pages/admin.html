@@ -349,18 +349,24 @@ window.switchTab = function(tabName) {
         }
 
         // --- GRID & FILTER LOGIC ---
+        // --- GRID & FILTER LOGIC ---
+        window.deleteFromGrid = function(e, id) {
+            e.stopPropagation(); // Safely stops the click from opening the modal
+            softDeleteAchievement(id);
+        };
+
         window.applyGridFilters = function() {
             const studentText = document.getElementById('filter-student').value.toLowerCase();
             const deptVal = document.getElementById('filter-department').value;
             const catVal = document.getElementById('filter-category').value;
 
-            // Only filter Verified achievements for the grid
             const baseGridData = allRequests.filter(req => req.status === 'Verified');
 
             filteredGridData = baseGridData.filter(cert => {
                 const matchStudent = (cert.student_name || '').toLowerCase().includes(studentText);
                 const matchDept = (deptVal === 'All' || cert.department === deptVal);
-                const matchCat = (catVal === 'All' || cert.category.includes(catVal)); 
+                // NEW: Added a fallback so it doesn't crash if category is empty
+                const matchCat = (catVal === 'All' || (cert.category || '').includes(catVal)); 
                 return matchStudent && matchDept && matchCat;
             });
 
@@ -381,7 +387,7 @@ window.switchTab = function(tabName) {
                 
                 grid.innerHTML += `
                     <div class="admin-card" onclick="openModal(${req.id})">
-                        <button class="delete-float-btn" onclick="event.stopPropagation(); softDeleteAchievement(${req.id})" title="Delete this card">Delete</button>
+                    <button class="delete-float-btn" onclick="deleteFromGrid(event, ${req.id})" title="Delete this card">Delete</button>
                         
                         <img src="${imgPath}" class="admin-card-img" alt="Photo">
                         <h4 style="margin-bottom: 5px; font-size: 1.1rem; color: #1E3A8A;">${req.title}</h4>

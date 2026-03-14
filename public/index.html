@@ -302,7 +302,8 @@
             filteredCerts = allPublicCerts.filter(cert => {
                 const matchStudent = (cert.student_name || '').toLowerCase().includes(studentText);
                 const matchDept = (deptVal === 'All' || cert.department === deptVal);
-                const matchCat = (catVal === 'All' || cert.category.includes(catVal)); 
+                // NEW: Added the safe fallback here too!
+                const matchCat = (catVal === 'All' || (cert.category || '').includes(catVal)); 
                 return matchStudent && matchDept && matchCat;
             });
 

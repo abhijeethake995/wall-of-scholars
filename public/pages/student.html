@@ -589,15 +589,21 @@
                     podium.innerHTML = '<p class="text-center">Awaiting first approvals!</p>';
                 }
             } catch(e) {}
-
+// 3. Wall of Fame (Shows Pinned, falls back to latest Verified)
             try {
                 const certRes = await fetch('/api/achievements/public');
                 const certs = await certRes.json();
                 
                 certs.forEach(cert => globalCertsMap[cert.id] = cert);
-                const pinnedCerts = certs.filter(cert => cert.is_pinned === 1 || cert.is_pinned === true);
                 
-                renderCards(pinnedCerts.slice(0, 6), 'wall-of-fame-grid');
+                let displayCerts = certs.filter(cert => cert.is_pinned === 1 || cert.is_pinned === true);
+                
+                // NEW: If the admin hasn't pinned anything, just show the latest 6 approved ones!
+                if (displayCerts.length === 0) {
+                    displayCerts = certs; 
+                }
+                
+                renderCards(displayCerts.slice(0, 6), 'wall-of-fame-grid');
             } catch(e) { console.error("Wall of Fame Error:", e); }
 
             document.getElementById('user-domain-text').innerText = "Highly Valued Industry Certifications";
@@ -641,7 +647,7 @@
             } catch(e) { console.error("Error:", e); }
         }
 
-        window.applyFilters = function() {
+       window.applyFilters = function() {
             const studentText = document.getElementById('filter-student').value.toLowerCase();
             const deptVal = document.getElementById('filter-department').value;
             const catVal = document.getElementById('filter-category').value;
@@ -649,7 +655,8 @@
             filteredCerts = allPublicCerts.filter(cert => {
                 const matchStudent = (cert.student_name || '').toLowerCase().includes(studentText);
                 const matchDept = (deptVal === 'All' || cert.department === deptVal);
-                const matchCat = (catVal === 'All' || cert.category.includes(catVal)); 
+                // NEW: Added the safe fallback here too!
+                const matchCat = (catVal === 'All' || (cert.category || '').includes(catVal)); 
                 return matchStudent && matchDept && matchCat;
             });
 
@@ -807,8 +814,14 @@
             } catch(e) { console.error("Error loading my certs:", e); }
         }
 
-        document.getElementById('achievementForm').addEventListener('submit', async (e) => {
+       document.getElementById('achievementForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // NEW: Disable button to prevent double clicks!
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Submitting... Please wait";
+
             const formData = new FormData();
             formData.append('student_name', document.getElementById('student_name').value);
             formData.append('department', document.getElementById('department').value);
@@ -827,9 +840,14 @@
                 } else {
                     alert("Submission failed. Please try again.");
                 }
-            } catch(e) { alert("Error submitting."); }
+            } catch(e) { 
+                alert("Error submitting."); 
+            } finally {
+                // NEW: Re-enable the button after it finishes
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Submit for Review";
+            }
         });
-
         loadHomeData();
 
         window.openModal = function(id) {
