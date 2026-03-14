@@ -5,6 +5,17 @@ require('dotenv').config();
 require('dns').setDefaultResultOrder('ipv4first');
 
 const app = express();
+
+const app = express(); // You already have this line
+
+// --- NEW: AUTO-CREATE UPLOADS FOLDER ---
+const fs = require('fs');
+if (!fs.existsSync('./uploads')) {
+    fs.mkdirSync('./uploads');
+}
+// ---------------------------------------
+
+const bcrypt = require('bcrypt'); // You already have this line
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('./config/db'); 
