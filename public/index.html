@@ -267,14 +267,22 @@
             } catch(e) {}
 
             // 3. Wall of Fame (ONLY Pinned, Limit 6)
+           // 3. Wall of Fame (Shows Pinned, falls back to latest Verified)
             try {
                 const certRes = await fetch('/api/achievements/public');
                 const certs = await certRes.json();
                 
                 certs.forEach(cert => globalCertsMap[cert.id] = cert);
                 
-                const pinnedCerts = certs.filter(cert => cert.is_pinned === 1 || cert.is_pinned === true);
-                renderCards(pinnedCerts.slice(0, 6), 'wall-of-fame-grid');
+                // Bulletproof check for pinned status
+                let displayCerts = certs.filter(cert => cert.is_pinned == 1 || cert.is_pinned === true);
+                
+                // If the admin hasn't pinned anything, fallback to showing the 6 latest approved ones!
+                if (displayCerts.length === 0) {
+                    displayCerts = certs; 
+                }
+                
+                renderCards(displayCerts.slice(0, 6), 'wall-of-fame-grid');
             } catch(e) { console.error("Wall of Fame Error:", e); }
         }
 
@@ -294,7 +302,7 @@
         }
 
         // --- FILTERS & PAGINATION ---
-        window.applyFilters = function() {
+       window.applyFilters = function() {
             const studentText = document.getElementById('filter-student').value.toLowerCase();
             const deptVal = document.getElementById('filter-department').value;
             const catVal = document.getElementById('filter-category').value;
@@ -302,7 +310,7 @@
             filteredCerts = allPublicCerts.filter(cert => {
                 const matchStudent = (cert.student_name || '').toLowerCase().includes(studentText);
                 const matchDept = (deptVal === 'All' || cert.department === deptVal);
-                // NEW: Added the safe fallback here too!
+                // Safe fallback prevents crashes if category is missing
                 const matchCat = (catVal === 'All' || (cert.category || '').includes(catVal)); 
                 return matchStudent && matchDept && matchCat;
             });
@@ -325,7 +333,7 @@
         }
 
         // --- RENDER CARDS & POPUP LOGIC ---
-        function renderCards(dataArray, containerId) {
+      function renderCards(dataArray, containerId) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
             
@@ -339,16 +347,15 @@
                 container.innerHTML += `
                     <div class="col-md-4">
                         <div class="achievement-card text-center" onclick="openModal(${item.id})">
-                            <img src="${imgPath}" class="achievement-img" alt="Photo">
+                            <img src="${imgPath}" class="achievement-img" alt="Photo" onerror="this.src='https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600&auto=format&fit=crop'">
                             <h5 class="mt-3 fw-bold">${item.title}</h5>
                             <p class="student-name">${item.student_name}</p>
-                            <span class="badge bg-primary text-white px-3 py-2 rounded-pill">${item.category}</span>
+                            <span class="badge bg-primary text-white px-3 py-2 rounded-pill">${item.category || 'Other'}</span>
                         </div>
                     </div>
                 `;
             });
         }
-
         // Modal Trigger Function
         window.openModal = function(id) {
             const cert = globalCertsMap[id];

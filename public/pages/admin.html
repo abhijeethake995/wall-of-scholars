@@ -382,14 +382,14 @@ window.switchTab = function(tabName) {
                 return;
             }
 
-            filteredGridData.forEach(req => {
+           filteredGridData.forEach(req => {
                 const imgPath = req.student_photo || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600&auto=format&fit=crop';
                 
                 grid.innerHTML += `
                     <div class="admin-card" onclick="openModal(${req.id})">
-                    <button class="delete-float-btn" onclick="deleteFromGrid(event, ${req.id})" title="Delete this card">Delete</button>
+                        <button class="delete-float-btn" onclick="event.stopPropagation(); window.softDeleteAchievement(${req.id});" title="Delete this card">Delete</button>
                         
-                        <img src="${imgPath}" class="admin-card-img" alt="Photo">
+                        <img src="${imgPath}" class="admin-card-img" alt="Photo" onerror="this.src='https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600&auto=format&fit=crop'">
                         <h4 style="margin-bottom: 5px; font-size: 1.1rem; color: #1E3A8A;">${req.title}</h4>
                         <p style="margin-bottom: 5px; font-weight: bold; color: #374151;">${req.student_name}</p>
                         <p style="margin-bottom: 10px; font-size: 0.85rem; color: gray;">${req.department}</p>
